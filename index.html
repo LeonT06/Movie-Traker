@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leon's Movie Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .header-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .reset-btn, .watched-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+        
+        .watched-btn {
+            background: #3498db;
+        }
+        
+        .reset-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .watched-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .category {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+            font-size: 1.8rem;
+        }
+        
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+        }
+        
+        .movie-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .movie-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            transition: all 0.5s ease;
+        }
+        
+        .movie-card label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .movie-card label:hover {
+            background: #f8f9fa;
+        }
+        
+        input[type="checkbox"] {
+            margin-left: 8px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        
+        /* Effects for checked movies */
+        .movie-card.checked {
+            filter: grayscale(100%) brightness(70%);
+            opacity: 0.7;
+            transform: scale(0.95);
+            order: 1; /* This will push checked movies to the bottom */
+        }
+        
+        .movie-card.unchecked {
+            order: 0; /* This will keep unchecked movies at the top */
+        }
+        
+        /* Watched Movies Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+        
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: #c0392b;
+            transform: rotate(90deg);
+        }
+        
+        .watched-movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .watched-movie-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .watched-movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .watched-movie-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .watched-movie-card .movie-title {
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .no-watched-movies {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header-buttons {
+                position: relative;
+                top: auto;
+                right: auto;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .watched-movies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Leon's Movie Tracker</h1>
+            <p class="subtitle">Track your movie journey and mark watched films</p>
+            <div class="header-buttons">
+                <button class="watched-btn" id="watched-btn">Watched</button>
+                <button class="reset-btn" id="reset-btn">Reset</button>
+            </div>
+        </header>
+
+        <!-- HERO'S JOURNEY -->
+        <div class="category">
+            <h2>🔥 HERO'S JOURNEY / PERSONAL GROWTH</h2>
+            <div class="movie-grid" id="category1">
+                <div class="movie-card unchecked" data-original-order="1"><img src="https://m.media-amazon.com/images/M/MV5BOTY4YjI2N2MtYmFlMC00ZjcyLTg3YjEtMDQyM2ZjYzQ5YWFkXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg" alt="Batman Begins"><label><input type="checkbox" id="movie1"> Batman Begins</label></div>
+                <div class="movie-card unchecked" data-original-order="2"><img src="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg" alt="The Dark Knight"><label><input type="checkbox" id="movie2"> The Dark Knight</label></div>
+                <div class="movie-card unchecked" data-original-order="3"><img src="https://m.media-amazon.com/images/M/MV5BMTk4ODQzNDY3Ml5BMl5BanBnXkFtZTcwODA0NTM4Nw@@._V1_FMjpg_UX1000_.jpg" alt="The Dark Knight Rises"><label><input type="checkbox" id="movie3"> The Dark Knight Rises</label></div>
+                <div class="movie-card unchecked" data-original-order="4"><img src="https://m.media-amazon.com/images/M/MV5BMDdmMTBiNTYtMDIzNi00NGVlLWIzMDYtZTk3MTQ3NGQxZGEwXkEyXkFqcGdeQXVyMzMwOTU5MDk@._V1_.jpg" alt="The Batman"><label><input type="checkbox" id="movie4"> The Batman</label></div>
+                <div class="movie-card unchecked" data-original-order="5"><img src="https://m.media-amazon.com/images/M/MV5BMTQ4MzQ3MzA5NF5BMl5BanBnXkFtZTgwOTQ1NjU0OTE@._V1_.jpg" alt="Dangal"><label><input type="checkbox" id="movie5"> Dangal</label></div>
+                <div class="movie-card unchecked" data-original-order="6"><img src="https://m.media-amazon.com/images/M/MV5BNTkyOGVjMWYtZGY0Ny00ODk4LTk5OTItM2NlMWVjM2Y5ODk1XkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_.jpg" alt="Sultan"><label><input type="checkbox" id="movie6"> Sultan</label></div>
+                <div class="movie-card unchecked" data-original-order="7"><img src="https://m.media-amazon.com/images/M/MV5BMTQ5NjQ0NDI3NF5BMl5BanBnXkFtZTcwNDI0MjEzMw@@._V1_FMjpg_UX1000_.jpg" alt="The Pursuit of Happyness"><label><input type="checkbox" id="movie7"> The Pursuit of Happyness</label></div>
+                <div class="movie-card unchecked" data-original-order="8"><img src="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" alt="Interstellar"><label><input type="checkbox" id="movie8"> Interstellar</label></div>
+                <div class="movie-card unchecked" data-original-order="9"><img src="https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_FMjpg_UX1000_.jpg" alt="Inception"><label><input type="checkbox" id="movie9"> Inception</label></div>
+                <div class="movie-card unchecked" data-original-order="10"><img src="https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_.jpg" alt="Oppenheimer"><label><input type="checkbox" id="movie10"> Oppenheimer</label></div>
+                <div class="movie-card unchecked" data-original-order="11"><img src="https://m.media-amazon.com/images/M/MV5BYjE3YjFkYjMtMjUwZi00ZDM4LWI1Y2MtYzUxYzY1YzFmM2UxXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_FMjpg_UX1000_.jpg" alt="Lucky Baskhar"><label><input type="checkbox" id="movie11"> Lucky Baskhar</label></div>
+                <div class="movie-card unchecked" data-original-order="12"><img src="https://m.media-amazon.com/images/M/MV5BZWE4N2JkNDUtZDU4MC00ZjNhLTlkMjYtOTNkMjZhMDAwODMyXkEyXkFqcGdeQXVyOTA3MTc0MjA@._V1_.jpg" alt="Ala Vaikunthapurramuloo"><label><input type="checkbox" id="movie12"> Ala Vaikunthapurramuloo</label></div>
+                <div class="movie-card unchecked" data-original-order="13"><img src="https://m.media-amazon.com/images/M/MV5BNTkyOGVjMWYtZGY0Ny00ODk4LTk5OTItM2NlMWVjM2Y5ODk1XkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_.jpg" alt="3 Idiots"><label><input type="checkbox" id="movie13"> 3 Idiots</label></div>
+                <div class="movie-card unchecked" data-original-order="14"><img src="https://m.media-amazon.com/images/M/MV5BMTYzOTE2NjkxN15BMl5BanBnXkFtZTgwMDgzMTg0MzE@._V1_FMjpg_UX1000_.jpg" alt="PK"><label><input type="checkbox" id="movie14"> PK</label></div>
+                <div class="movie-card unchecked" data-original-order="15"><img src="https://m.media-amazon.com/images/M/MV5BODgwZDg5YjMtM2Y1ZS00MDJjLWE3ZWItMGE4MTJmCDFmY2U1XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg" alt="Your Name"><label><input type="checkbox" id="movie15"> Your Name</label></div>
+                <div class="movie-card unchecked" data-original-order="16"><img src="https://m.media-amazon.com/images/M/MV5BNzYyODM4NDU1NV5BMl5BanBnXkFtZTgwNzg3MDc2NTM@._V1_FMjpg_UX1000_.jpg" alt="Weathering With You"><label><input type="checkbox" id="movie16"> Weathering With You</label></div>
+                <div class="movie-card unchecked" data-original-order="17"><img src="https://m.media-amazon.com/images/M/MV5BZGRkOGMxYTUtZTBhYS00NzI3LWEzMDQtOWRhMmNjNjJjMzM4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg" alt="A Silent Voice"><label><input type="checkbox" id="movie17"> A Silent Voice</label></div>
+                <div class="movie-card unchecked" data-original-order="18"><img src="https://m.media-amazon.com/images/M/MV5BODJhZDU1MDYtMDQ0NS00N2JmLWI2ZDAtMGNmN2RmNWJhNzQ5L2ltYWdlXkEyXkFqcGdeQXVyNjY1OTY4MTk@._V1_.jpg" alt="5 Centimeters per Second"><label><input type="checkbox" id="movie18"> 5 Centimeters per Second</label></div>
+            </div>
+        </div>
+
+        <!-- AMBITION, POWER -->
+        <div class="category">
+            <h2>⚔️ AMBITION, POWER, RESPONSIBILITY</h2>
+            <div class="movie-grid" id="category2">
+                <div class="movie-card unchecked" data-original-order="1"><img src="https://m.media-amazon.com/images/M/MV5BZjRjOTFkOTktZWUzMi00YzMyLThkMmYtMjEwNmQyNzliYTNmXkEyXkFqcGdeQXVyNzQ1ODk3MTQ@._V1_FMjpg_UX1000_.jpg" alt="KGF 1"><label><input type="checkbox" id="movie19"> KGF Chapter 1</label></div>
+                <div class="movie-card unchecked" data-original-order="2"><img src="https://m.media-amazon.com/images/M/MV5BMjMwMDgyOGQtMWZjNC00MDUwLTllZDYtZWM3NDBmN2YzNGZmXkEyXkFqcGdeQXVyMTQzNTA5MzYz._V1_FMjpg_UX1000_.jpg" alt="KGF 2"><label><input type="checkbox" id="movie20"> KGF Chapter 2</label></div>
+                <div class="movie-card unchecked" data-original-order="3"><img src="https://m.media-amazon.com/images/M/MV5BNWY3M2I2YzItYjVhOS00MWM0LTg0NGMtOWFkNGU1NDM3YzFjXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_.jpg" alt="Animal"><label><input type="checkbox" id="movie21"> Animal</label></div>
+                <div class="movie-card unchecked" data-original-order="4"><img src="https://m.media-amazon.com/images/M/MV5BODUwNDNjYzctODUxNy00ZTA2LWIyYTEtMDc5Y2E5ZjBmNTMzXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_FMjpg_UX1000_.jpg" alt="RRR"><label><input type="checkbox" id="movie22"> RRR</label></div>
+                <div class="movie-card unchecked" data-original-order="5"><img src="https://m.media-amazon.com/images/M/MV5BOTc2Zjk3MGUtNDUxYi00ZDM1LTk2MTItNGQ1YjA0YTQ1ODBkXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_.jpg" alt="Jawan"><label><input type="checkbox" id="movie23"> Jawan</label></div>
+                <div class="movie-card unchecked" data-original-order="6"><img src="https://m.media-amazon.com/images/M/MV5BMTY1MjIxMTAtNjRhYy00MGE5LTk3MjUtYmM0MTY1N2M5MjEwXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_.jpg" alt="Kalki 2898 AD"><label><input type="checkbox" id="movie24"> Kalki 2898 AD</label></div>
+                <div class="movie-card unchecked" data-original-order="7"><img src="https://m.media-amazon.com/images/M/MV5BODQ0NDhjYzktZTUwMC00ZTBhLThhZGItM2UxNDJjZDFmNDM0XkEyXkFqcGdeQXVyNTE0MDc0NTM@._V1_FMjpg_UX1000_.jpg" alt="Bahubali 1"><label><input type="checkbox" id="movie25"> Bahubali 1</label></div>
+                <div class="movie-card unchecked" data-original-order="8"><img src="https://m.media-amazon.com/images/M/MV5BOGNlNmRkMjctNDgxMC00NzFhLWIzY2YtZDk3ZDE0NXZhMjBiXkEyXkFqcGdeQXVyNjQ1MDcxNzM@._V1_FMjpg_UX1000_.jpg" alt="Bahubali 2"><label><input type="checkbox" id="movie26"> Bahubali 2</label></div>
+                <div class="movie-card unchecked" data-original-order="9"><img src="https://m.media-amazon.com/images/M/MV5BMjE3NTQyNDUzOV5BMl5BanBnXkFtZTgwMDIzMDEwMTE@._V1_FMjpg_UX1000_.jpg" alt="Game of Thrones"><label><input type="checkbox" id="movie27"> Game of Thrones</label></div>
+                <div class="movie-card unchecked" data-original-order="10"><img src="https://m.media-amazon.com/images/M/MV5BMTYyMTcxNzc5M15BMl5BanBnXkFtZTgwOTg2ODE2MTI@._V1_FMjpg_UX1000_.jpg" alt="Pirates of the Caribbean"><label><input type="checkbox" id="movie28"> Pirates of the Caribbean</label></div>
+                <div class="movie-card unchecked" data-original-order="11"><img src="https://m.media-amazon.com/images/M/MV5BYjE3YjFkYjMtMjUwZi00ZDM4LWI1Y2MtYzUxYzY1YzFmM2UxXkEyXkFqcGdeQXVyMTUzOTcyODA5._V1_FMjpg_UX1000_.jpg" alt="Lucky Baskhar"><label><input type="checkbox" id="movie29"> Lucky Baskhar</label></div>
+                <div class="movie-card unchecked" data-original-order="12"><img src="https://m.media-amazon.com/images/M/MV5BZWE4N2JkNDUtZDU4MC00ZjNhLTlkMjYtOTNkMjZhMDAwODMyXkEyXkFqcGdeQXVyOTA3MTc0MjA@._V1_.jpg" alt="Ala Vaikunthapurramuloo"><label><input type="checkbox" id="movie30"> Ala Vaikunthapurramuloo</label></div>
+            </div>
+        </div>
+
+        <!-- ANIME / ANTI-HERO -->
+        <div class="category">
+            <h2>🔥 ANIME / ANTI-HERO MINDSET & STRATEGY</h2>
+            <div class="movie-grid" id="category3">
+                <div class="movie-card unchecked" data-original-order="1"><img src="https://m.media-amazon.com/images/M/MV5BMTY5ODk1NzUyMl5BMl5BanBnXkFtZTgwMjUyNzEyMTE@._V1_FMjpg_UX1000_.jpg" alt="Attack on Titan"><label><input type="checkbox" id="movie31"> Attack on Titan</label></div>
+                <div class="movie-card unchecked" data-original-order="2"><img src="https://m.media-amazon.com/images/M/MV5BZDg0MWMyNjMtMDBjMC00Mzk4LTg1OTAtODgyN2E2OTJmYzEyXkEyXkFqcGdeQXVyMTUzMTg2ODkz._V1_FMjpg_UX1000_.jpg" alt="Solo Leveling"><label><input type="checkbox" id="movie32"> Solo Leveling</label></div>
+                <div class="movie-card unchecked" data-original-order="3"><img src="https://m.media-amazon.com/images/M/MV5BODI2NjdlYWItMTE1ZC00YzI2LTlhZGQtNzE3NzA4MWM0ODYzXkEyXkFqcGdeQXVyNjU1OTg4OTM@._V1_FMjpg_UX1000_.jpg" alt="Demon Slayer: Mugen Train"><label><input type="checkbox" id="movie33"> Demon Slayer: Mugen Train</label></div>
+                <div class="movie-card unchecked" data-original-order="4"><img src="https://m.media-amazon.com/images/M/MV5BZjU1M2YwZDktYjNlZi00ODU4LTk0Y2ItNGU3ZTI4Y2M5Y2VlXkEyXkFqcGdeQXVyMTA1NjQyNjkw._V1_.jpg" alt="Demon Slayer: Infinity Castle"><label><input type="checkbox" id="movie34"> Demon Slayer: Infinity Castle</label></div>
+                <div class="movie-card unchecked" data-original-order="5"><img src="https://m.media-amazon.com/images/M/MV5BZjU1M2YwZDktYjNlZi00ODU4LTk0Y2ItNGU3ZTI4Y2M5Y2VlXkEyXkFqcGdeQXVyMTA1NjQyNjkw._V1_.jpg" alt="Demon Slayer Full Series"><label><input type="checkbox" id="movie35"> Demon Slayer (Full Series)</label></div>
+                <div class="movie-card unchecked" data-original-order="6"><img src="https://m.media-amazon.com/images/M/MV5BNzQyYzU3Y2MtOWRkYy00NzFjLTg1MWUtYjQ1ZTAwMTQ5MTJiXkEyXkFqcGdeQXVyMTMwMDU5NDM0._V1_FMjpg_UX1000_.jpg" alt="Jujutsu Kaisen"><label><input type="checkbox" id="movie36"> Jujutsu Kaisen</label></div>
+                <div class="movie-card unchecked" data-original-order="7"><img src="https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg" alt="Death Note"><label><input type="checkbox" id="movie37"> Death Note</label></div>
+                <div class="movie-card unchecked" data-original-order="8"><img src="https://m.media-amazon.com/images/M/MV5BZmE5YTM2YTktZGU2Zi00MjNkLWI0YzMtYzVkM2ZlN2YwYTEzXkEyXkFqcGdeQXVyNjg3MDMxNzU@._V1_.jpg" alt="Ne Zha"><label><input type="checkbox" id="movie38"> Ne Zha</label></div>
+                <div class="movie-card unchecked" data-original-order="9"><img src="https://m.media-amazon.com/images/M/MV5BNDFjY2M5Y2QtZGE0YS00YjFkLThhN2YtODQ5NDkyMWY1MmUyXkEyXkFqcGdeQXVyMTEzMTI1Mjk3._V1_.jpg" alt="Ne Zha 2"><label><input type="checkbox" id="movie39"> Ne Zha 2</label></div>
+                <div class="movie-card unchecked" data-original-order="10"><img src="https://m.media-amazon.com/images/M/MV5BZjU1M2YwZDktYjNlZi00ODU4LTk0Y2ItNGU3ZTI4Y2M5Y2VlXkEyXkFqcGdeQXVyMTA1NjQyNjkw._V1_.jpg" alt="Demon Slayer"><label><input type="checkbox" id="movie40"> Demon Slayer</label></div>
+            </div>
+        </div>
+
+        <!-- SELF-SACRIFICE & COURAGE -->
+        <div class="category">
+            <h2>💪 SELF-SACRIFICE & COURAGE</h2>
+            <div class="movie-grid" id="category4">
+                <div class="movie-card unchecked" data-original-order="1"><img src="https://m.media-amazon.com/images/M/MV5BODUwNDNjYzctODUxNy00ZTA2LWIyYTEtMDc5Y2E5ZjBmNTMzXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_FMjpg_UX1000_.jpg" alt="RRR"><label><input type="checkbox" id="movie41"> RRR</label></div>
+                <div class="movie-card unchecked" data-original-order="2"><img src="https://m.media-amazon.com/images/M/MV5BMjMxNjY2MDU1OV5BMl5BanBnXkFtZTgwNzY1MTUwNTM@._V1_FMjpg_UX1000_.jpg" alt="Avengers: Infinity War"><label><input type="checkbox" id="movie42"> Avengers: Infinity War</label></div>
+                <div class="movie-card unchecked" data-original-order="3"><img src="https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_FMjpg_UX1000_.jpg" alt="Avengers: Endgame"><label><input type="checkbox" id="movie43"> Avengers: Endgame</label></div>
+                <div class="movie-card unchecked" data-original-order="4"><img src="https://m.media-amazon.com/images/M/MV5BOTY4YjI2N2MtYmFlMC00ZjcyLTg3YjEtMDQyM2ZjYzQ5YWFkXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg" alt="Batman Trilogy"><label><input type="checkbox" id="movie44"> Batman Trilogy</label></div>
+                <div class="movie-card unchecked" data-original-order="5"><img src="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" alt="Interstellar"><label><input type="checkbox" id="movie45"> Interstellar</label></div>
+                <div class="movie-card unchecked" data-original-order="6"><img src="https://m.media-amazon.com/images/M/MV5BYTYxNGMyZTYtMjE3MS00MzNjLWFjNmYtMDk3N2FmM2JiM2M1XkEyXkFqcGdeQXVyNjY5NDU4NzI@._V1_FMjpg_UX1000_.jpg" alt="The Lion King"><label><input type="checkbox" id="movie46"> The Lion King</label></div>
+                <div class="movie-card unchecked" data-original-order="7"><img src="https://m.media-amazon.com/images/M/MV5BZWYzOGEwNTgtNWU3NS00ZTQ0LWJkODUtMmVhMjIwMjA1ZmQwXkEyXkFqcGdeQXVyMjkwOTAyMDU@._V1_FMjpg_UX1000_.jpg" alt="Top Gun: Maverick"><label><input type="checkbox" id="movie47"> Top Gun: Maverick</label></div>
+                <div class="movie-card unchecked" data-original-order="8"><img src="https://m.media-amazon.com/images/M/MV5BZjU1M2YwZDktYjNlZi00ODU4LTk0Y2ItNGU3ZTI4Y2M5Y2VlXkEyXkFqcGdeQXVyMTA1NjQyNjkw._V1_.jpg" alt="Demon Slayer"><label><input type="checkbox" id="movie48"> Demon Slayer</label></div>
+                <div class="movie-card unchecked" data-original-order="9"><img src="https://m.media-amazon.com/images/M/MV5BNzQyYzU3Y2MtOWRkYy00NzFjLTg1MWUtYjQ1ZTAwMTQ5MTJiXkEyXkFqcGdeQXVyMTMwMDU5NDM0._V1_FMjpg_UX1000_.jpg" alt="Jujutsu Kaisen"><label><input type="checkbox" id="movie49"> Jujutsu Kaisen</label></div>
+                <div class="movie-card unchecked" data-original-order="10"><img src="https://m.media-amazon.com/images/M/MV5BODkzMjhjYTQtYmQyOS00NmZlLTg3Y2UtYjkzN2JkNmRjY2FhXkEyXkFqcGdeQXVyNTM4MDQ5MDc@._V1_FMjpg_UX1000_.jpg" alt="Death Note"><label><input type="checkbox" id="movie50"> Death Note</label></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Leon's Movie Tracker &copy; 2023 | Track your cinematic journey</p>
+        </footer>
+    </div>
+
+    <!-- Watched Movies Modal -->
+    <div class="modal" id="watched-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🎬 Your Watched Movies</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div id="watched-movies-container">
+                <!-- Watched movies will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const resetBtn = document.getElementById('reset-btn');
+        const watchedBtn = document.getElementById('watched-btn');
+        const watchedModal = document.getElementById('watched-modal');
+        const closeModal = document.getElementById('close-modal');
+        const watchedMoviesContainer = document.getElementById('watched-movies-container');
+        
+        // Store original order for each category
+        const originalOrders = {};
+        
+        // Initialize original orders
+        document.querySelectorAll('.movie-grid').forEach(grid => {
+            const categoryId = grid.id;
+            originalOrders[categoryId] = [];
+            
+            grid.querySelectorAll('.movie-card').forEach((card, index) => {
+                const movieId = card.querySelector('input[type="checkbox"]').id;
+                originalOrders[categoryId].push({
+                    movieId: movieId,
+                    order: index
+                });
+            });
+        });
+        
+        // Initialize checkboxes and apply effects for previously checked items
+        checkboxes.forEach(chk => {
+            if(localStorage.getItem(chk.id) === 'true') {
+                chk.checked = true;
+                applyCheckedEffects(chk);
+            }
+            
+            chk.addEventListener('change', () => {
+                localStorage.setItem(chk.id, chk.checked);
+                applyCheckedEffects(chk);
+                reorganizeCategory(chk);
+            });
+        });
+        
+        function applyCheckedEffects(checkbox) {
+            const movieCard = checkbox.closest('.movie-card');
+            
+            if (checkbox.checked) {
+                // Apply grayscale and dim effects immediately
+                movieCard.classList.add('checked');
+                movieCard.classList.remove('unchecked');
+            } else {
+                // Remove all effects if unchecked
+                movieCard.classList.remove('checked');
+                movieCard.classList.add('unchecked');
+            }
+        }
+        
+        function reorganizeCategory(checkbox) {
+            const movieCard = checkbox.closest('.movie-card');
+            const categoryGrid = movieCard.parentElement;
+            
+            // Remove the movie card from its current position
+            movieCard.remove();
+            
+            // Add it back to the appropriate position based on checked status
+            if (checkbox.checked) {
+                // Add to the end (bottom) for checked movies
+                categoryGrid.appendChild(movieCard);
+            } else {
+                // Add to the beginning (top) for unchecked movies
+                categoryGrid.insertBefore(movieCard, categoryGrid.firstChild);
+            }
+        }
+        
+        function restoreOriginalOrder() {
+            // Restore original order for each category
+            Object.keys(originalOrders).forEach(categoryId => {
+                const grid = document.getElementById(categoryId);
+                const movies = Array.from(grid.querySelectorAll('.movie-card'));
+                
+                // Sort movies based on original order
+                movies.sort((a, b) => {
+                    const aOrder = parseInt(a.getAttribute('data-original-order'));
+                    const bOrder = parseInt(b.getAttribute('data-original-order'));
+                    return aOrder - bOrder;
+                });
+                
+                // Clear the grid
+                grid.innerHTML = '';
+                
+                // Append movies in original order
+                movies.forEach(movie => {
+                    grid.appendChild(movie);
+                });
+            });
+        }
+        
+        // Reset functionality
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all watched movies?')) {
+                checkboxes.forEach(chk => {
+                    chk.checked = false;
+                    localStorage.setItem(chk.id, false);
+                    
+                    const movieCard = chk.closest('.movie-card');
+                    movieCard.classList.remove('checked');
+                    movieCard.classList.add('unchecked');
+                });
+                
+                // Restore the original order
+                restoreOriginalOrder();
+            }
+        });
+        
+        // Watched movies functionality
+        watchedBtn.addEventListener('click', () => {
+            showWatchedMovies();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            watchedModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === watchedModal) {
+                watchedModal.style.display = 'none';
+            }
+        });
+        
+        function showWatchedMovies() {
+            const watchedMovies = Array.from(checkboxes)
+                .filter(chk => chk.checked)
+                .map(chk => {
+                    const movieCard = chk.closest('.movie-card');
+                    const img = movieCard.querySelector('img').src;
+                    const title = movieCard.querySelector('label').textContent.trim();
+                    return { img, title };
+                });
+            
+            watchedMoviesContainer.innerHTML = '';
+            
+            if (watchedMovies.length === 0) {
+                watchedMoviesContainer.innerHTML = '<div class="no-watched-movies">You haven\'t watched any movies yet!</div>';
+            } else {
+                const grid = document.createElement('div');
+                grid.className = 'watched-movies-grid';
+                
+                watchedMovies.forEach(movie => {
+                    const movieCard = document.createElement('div');
+                    movieCard.className = 'watched-movie-card';
+                    movieCard.innerHTML = `
+                        <img src="${movie.img}" alt="${movie.title}">
+                        <div class="movie-title">${movie.title}</div>
+                    `;
+                    grid.appendChild(movieCard);
+                });
+                
+                watchedMoviesContainer.appendChild(grid);
+            }
+            
+            watchedModal.style.display = 'flex';
+        }
+        
+        // Initialize the layout
+        checkboxes.forEach(chk => {
+            if (chk.checked) {
+                reorganizeCategory(chk);
+            }
+        });
+    </script>
+</body>
+</html>
